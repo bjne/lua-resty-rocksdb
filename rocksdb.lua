@@ -2,6 +2,7 @@ local ffi = require "ffi"
 local common = require "rocksdb.common"
 local options = require "rocksdb.options"
 
+local ffi_gc = ffi.gc
 local ffi_string = ffi.string
 
 ffi.cdef[[
@@ -12,6 +13,8 @@ extern char** rocksdb_list_column_families(
 /* api */
 extern rocksdb_t* rocksdb_open(
     const rocksdb_options_t* options, const char* name, char** errptr);
+
+extern void rocksdb_close(rocksdb_t* db);
 
 extern rocksdb_t* rocksdb_open_as_secondary(
     const rocksdb_options_t* options, const char* name,
@@ -34,10 +37,14 @@ local lib = ffi.load('rocksdb')
 local rocksdb do
     local NULL = ffi.new('void *')
 
-    rocksdb = function(fn, ...)
+    rocksdb = function(fn, db, ...)
+        if not db then
+            return nil, "database closed"
+        end
+
         local err_p = select(select('#', ...), ...)
         err_p[0] = NULL
-        local ok, ret = pcall(fn, ...)
+        local ok, ret = pcall(fn, db, ...)
         if ok then
             return err_p[0] == NULL and (ret or true), err_p[0] ~= NULL and ffi_string(err_p[0]) or nil
         end
@@ -50,7 +57,7 @@ local open, open_secondary do
     local size_p = ffi.new('size_t[1]')
     local err_p = ffi.new('char *[1]')
 
-    local secondary_opt = {max_open_files = -1, create_if_missing = false }
+    local secondary_opt = {max_open_files = -1, create_if_missing = false}
 
     local mt = {__index = {
         put = function(self, k, v, wo)
@@ -66,6 +73,10 @@ local open, open_secondary do
         end,
         try_catch_up = function(self)
             return rocksdb(lib.rocksdb_try_catch_up_with_primary, self.db, err_p)
+        end,
+        close = function(self)
+            lib.rocksdb_close(ffi_gc(self.db, nil))
+            self.db = nil
         end
     }}
 
@@ -91,6 +102,8 @@ local open, open_secondary do
             return nil, err
         end
 
+        ffi_gc(self.db, lib.rocksdb_close)
+
         if self.secondary then
             self:try_catch_up()
         end
@@ -108,10 +121,7 @@ local open, open_secondary do
 end
 
 --local db, err = open('/tmp/foox', {create_if_missing = 1, compression = lib.rocksdb_snappy_compression})
---local db, err = open('/tmp/foox', {create_if_missing = 1})
-local db, err = open_secondary('/tmp/foox', '/tmp/fooy', {create_if_missing = 1})
-
-print(db:try_catch_up())
+local db, err = open('/tmp/foox', {create_if_missing = 1})
 
 if not db then
     return nil, print(err)
@@ -119,17 +129,32 @@ end
 
 local ok, err
 
---for i=1,1000 do
---    ok, err = db:put('foo', 'bar')
---    if not ok then
---        return nil, print(err)
---    end
---end
+local niter = 1000000
 
-for i=1,1 do
-    ok, err = db:get('foo')
+for i=1,niter do
+    ok, err = db:put('foo'..tostring(i), 'bar'..tostring(i))
     if not ok then
         return nil, print(err)
     end
+end
+
+for i=1,niter do
+    ok, err = db:get('foo'..tostring(i))
+    if not ok then
+        return nil, print(err)
+    end
+end
+
+local secondary, err = open_secondary('/tmp/foox', '/tmp/fooy')
+if not secondary then
+    return nil, print(err)
+end
+
+for i=1,niter do
+    ok, err = secondary:get('foo'..tostring(i))
+    if not ok then
+        return nil, print(err)
+    end
+
     print(ok)
 end

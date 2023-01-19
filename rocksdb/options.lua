@@ -159,38 +159,60 @@ extern void rocksdb_options_set_compaction_style( rocksdb_options_t*, int);
 //extern void rocksdb_options_set_ratelimiter( rocksdb_options_t* opt, rocksdb_ratelimiter_t* limiter);
 extern void rocksdb_options_set_create_if_missing(rocksdb_options_t*, unsigned char);
 
-/* read_options */
-extern rocksdb_readoptions_t* rocksdb_readoptions_create();
-extern void rocksdb_readoptions_destroy(rocksdb_readoptions_t*);
-extern void rocksdb_readoptions_set_verify_checksums(rocksdb_readoptions_t*, unsigned char);
-extern void rocksdb_readoptions_set_fill_cache(rocksdb_readoptions_t*, unsigned char);
-//extern void rocksdb_readoptions_set_snapshot(rocksdb_readoptions_t*, const rocksdb_snapshot_t*);
-extern void rocksdb_readoptions_set_iterate_upper_bound(rocksdb_readoptions_t*, const char* key, size_t keylen);
-extern void rocksdb_readoptions_set_iterate_lower_bound(rocksdb_readoptions_t*, const char* key, size_t keylen);
-extern void rocksdb_readoptions_set_read_tier(rocksdb_readoptions_t*, int);
-extern void rocksdb_readoptions_set_tailing(rocksdb_readoptions_t*, unsigned char);
-extern void rocksdb_readoptions_set_readahead_size(rocksdb_readoptions_t*, size_t);
-extern void rocksdb_readoptions_set_prefix_same_as_start(rocksdb_readoptions_t*, unsigned char);
-extern void rocksdb_readoptions_set_pin_data(rocksdb_readoptions_t*, unsigned char);
-extern void rocksdb_readoptions_set_total_order_seek(rocksdb_readoptions_t*, unsigned char);
-extern void rocksdb_readoptions_set_max_skippable_internal_keys(rocksdb_readoptions_t*, uint64_t);
-extern void rocksdb_readoptions_set_background_purge_on_iterator_cleanup(rocksdb_readoptions_t*, unsigned char);
-extern void rocksdb_readoptions_set_ignore_range_deletions(rocksdb_readoptions_t*, unsigned char);
+/* read options */
 
-/* write_options */
-extern rocksdb_writeoptions_t*
-rocksdb_writeoptions_create();
-extern void rocksdb_writeoptions_destroy(rocksdb_writeoptions_t*);
-extern void rocksdb_writeoptions_set_sync(rocksdb_writeoptions_t*, unsigned char);
-extern void rocksdb_writeoptions_disable_WAL(rocksdb_writeoptions_t* opt, int disable);
-extern void rocksdb_writeoptions_set_ignore_missing_column_families(rocksdb_writeoptions_t*, unsigned char);
-extern void rocksdb_writeoptions_set_no_slowdown(rocksdb_writeoptions_t*, unsigned char);
-extern void rocksdb_writeoptions_set_low_pri(rocksdb_writeoptions_t*, unsigned char);
+extern rocksdb_readoptions_t* rocksdb_readoptions_create( void);
+extern void rocksdb_readoptions_destroy( rocksdb_readoptions_t*);
 
+extern void          rocksdb_readoptions_set_verify_checksums( rocksdb_readoptions_t*, unsigned char);
+extern unsigned char rocksdb_readoptions_get_verify_checksums(rocksdb_readoptions_t*);
+extern void          rocksdb_readoptions_set_fill_cache( rocksdb_readoptions_t*, unsigned char);
+extern unsigned char rocksdb_readoptions_get_fill_cache( rocksdb_readoptions_t*);
+//extern void        rocksdb_readoptions_set_snapshot( rocksdb_readoptions_t*, const rocksdb_snapshot_t*);
+extern void          rocksdb_readoptions_set_iterate_upper_bound( rocksdb_readoptions_t*, const char* key, size_t keylen);
+extern void          rocksdb_readoptions_set_iterate_lower_bound( rocksdb_readoptions_t*, const char* key, size_t keylen);
+extern void          rocksdb_readoptions_set_read_tier( rocksdb_readoptions_t*, int);
+extern int           rocksdb_readoptions_get_read_tier( rocksdb_readoptions_t*);
+extern void          rocksdb_readoptions_set_tailing( rocksdb_readoptions_t*, unsigned char);
+extern unsigned char rocksdb_readoptions_get_tailing( rocksdb_readoptions_t*);
+extern void          rocksdb_readoptions_set_readahead_size( rocksdb_readoptions_t*, size_t);
+extern size_t        rocksdb_readoptions_get_readahead_size(rocksdb_readoptions_t*);
+extern void          rocksdb_readoptions_set_prefix_same_as_start( rocksdb_readoptions_t*, unsigned char);
+extern unsigned char rocksdb_readoptions_get_prefix_same_as_start(rocksdb_readoptions_t*);
+extern void          rocksdb_readoptions_set_pin_data( rocksdb_readoptions_t*, unsigned char);
+extern unsigned char rocksdb_readoptions_get_pin_data( rocksdb_readoptions_t*);
+extern void          rocksdb_readoptions_set_total_order_seek( rocksdb_readoptions_t*, unsigned char);
+extern unsigned char rocksdb_readoptions_get_total_order_seek(rocksdb_readoptions_t*);
+extern void          rocksdb_readoptions_set_max_skippable_internal_keys(rocksdb_readoptions_t*, uint64_t);
+extern uint64_t      rocksdb_readoptions_get_max_skippable_internal_keys(rocksdb_readoptions_t*);
+extern void          rocksdb_readoptions_set_background_purge_on_iterator_cleanup( rocksdb_readoptions_t*, unsigned char);
+extern unsigned char rocksdb_readoptions_get_background_purge_on_iterator_cleanup( rocksdb_readoptions_t*);
+extern void          rocksdb_readoptions_set_ignore_range_deletions( rocksdb_readoptions_t*, unsigned char);
+extern unsigned char rocksdb_readoptions_get_ignore_range_deletions(rocksdb_readoptions_t*);
+extern void          rocksdb_readoptions_set_deadline( rocksdb_readoptions_t*, uint64_t microseconds);
+extern uint64_t      rocksdb_readoptions_get_deadline(rocksdb_readoptions_t*);
+extern void          rocksdb_readoptions_set_io_timeout( rocksdb_readoptions_t*, uint64_t microseconds);
+extern uint64_t      rocksdb_readoptions_get_io_timeout(rocksdb_readoptions_t*);
+extern void          rocksdb_readoptions_set_timestamp( rocksdb_readoptions_t*, const char* ts, size_t tslen);
+extern void          rocksdb_readoptions_set_iter_start_ts( rocksdb_readoptions_t*, const char* ts, size_t tslen);
 
-/* api */
-extern rocksdb_t* rocksdb_open(
-    const rocksdb_options_t* options, const char* name, char** errptr);
+/* write options */
+
+extern rocksdb_writeoptions_t* rocksdb_writeoptions_create( void);
+extern void rocksdb_writeoptions_destroy( rocksdb_writeoptions_t*);
+
+extern void          rocksdb_writeoptions_set_sync( rocksdb_writeoptions_t*, unsigned char);
+extern unsigned char rocksdb_writeoptions_get_sync( rocksdb_writeoptions_t*);
+extern void          rocksdb_writeoptions_disable_WAL( rocksdb_writeoptions_t* opt, int disable);
+extern unsigned char rocksdb_writeoptions_get_disable_WAL( rocksdb_writeoptions_t* opt);
+extern void          rocksdb_writeoptions_set_ignore_missing_column_families(rocksdb_writeoptions_t*, unsigned char);
+extern unsigned char rocksdb_writeoptions_get_ignore_missing_column_families( rocksdb_writeoptions_t*);
+extern void          rocksdb_writeoptions_set_no_slowdown( rocksdb_writeoptions_t*, unsigned char);
+extern unsigned char rocksdb_writeoptions_get_no_slowdown( rocksdb_writeoptions_t*);
+extern void          rocksdb_writeoptions_set_low_pri( rocksdb_writeoptions_t*, unsigned char);
+extern unsigned char rocksdb_writeoptions_get_low_pri( rocksdb_writeoptions_t*);
+extern void          rocksdb_writeoptions_set_memtable_insert_hint_per_batch(rocksdb_writeoptions_t*, unsigned char);
+extern unsigned char rocksdb_writeoptions_get_memtable_insert_hint_per_batch( rocksdb_writeoptions_t*);
 ]]
 
 local lib = ffi.load('rocksdb')
